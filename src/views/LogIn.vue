@@ -18,12 +18,11 @@
             </v-card>
           </v-col>
           <v-col cols="8" class="d-flex align-start justify-start carousel-section right-container">
-            <div class="carousel-background"></div>
+            <div class="carousel-background" ref="carouselBackground"></div>
             <div class="carousel-highlight carousel-description">
               <h1>Welcome to the <strong>Dulimbay Theater Arts Guild's Website</strong>!</h1>
-              <h3>
-                Here, you can stay updated on event schedules, payments, and attendance. Login to
-                keep track of all the exciting activities and important announcements!
+              <h3 class="typing-effect">
+                <span class="typed-text"></span><span class="caret">|</span>
               </h3>
             </div>
           </v-col>
@@ -59,19 +58,39 @@ export default {
       images: ['/images/dtag1.jpg', '/images/dtag2.jpg', '/images/dtag3.jpg'],
       currentIndex: 0,
       nextIndex: 1,
+      typingText:
+        'Here, you can stay updated on event schedules, payments, and attendance. Login to keep track of all the exciting activities and important announcements!',
+      typedIndex: 0,
     }
   },
   mounted() {
     this.startCarousel()
+    this.startTyping()
   },
   methods: {
     startCarousel() {
       setInterval(() => {
         this.nextIndex = (this.currentIndex + 1) % this.images.length
-        const backgroundContainer = document.querySelector('.carousel-background')
+        const backgroundContainer = this.$refs.carouselBackground
+        backgroundContainer.classList.remove('scroll-animation')
+        void backgroundContainer.offsetWidth // trigger reflow
         backgroundContainer.style.backgroundImage = `url(${this.images[this.nextIndex]})`
+        backgroundContainer.classList.add('scroll-animation')
         this.currentIndex = this.nextIndex
       }, 5000) // Change image every 5 seconds
+    },
+    startTyping() {
+      const element = document.querySelector('.typed-text')
+      const caret = document.querySelector('.caret')
+      const speed = 100 // Typing speed in milliseconds
+      setInterval(() => {
+        if (this.typedIndex < this.typingText.length) {
+          element.textContent += this.typingText.charAt(this.typedIndex)
+          this.typedIndex++
+        } else {
+          caret.style.display = 'none'
+        }
+      }, speed)
     },
   },
 }
@@ -187,8 +206,22 @@ v-card-text {
   right: 0;
   bottom: 0;
   background-size: cover;
-  background-position: center;
+  background-position: top center; /* Always start from the top */
   filter: blur(1px); /* Add blur effect to background */
+  overflow-y: hidden; /* Hide vertical scroll bar */
+}
+
+.scroll-animation {
+  animation: scroll 5s linear infinite;
+}
+
+@keyframes scroll {
+  0% {
+    background-position: top center;
+  }
+  100% {
+    background-position: bottom center;
+  }
 }
 
 .carousel-highlight {
@@ -205,6 +238,28 @@ v-card-text {
   text-shadow: 2px 2px 4px black; /* Added black outline to text */
   line-height: 1.5;
   word-break: break-word;
+}
+
+.typing-effect {
+  display: inline-flex;
+  align-items: center;
+}
+
+.typed-text {
+  display: inline;
+}
+
+.caret {
+  display: inline-block;
+  width: 10px;
+  background-color: white;
+  animation: blink 0.7s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Shadows */
