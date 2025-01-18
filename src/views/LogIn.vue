@@ -86,17 +86,38 @@ export default {
   methods: {
     async login() {
       try {
-        const { user, error } = await supabase.auth.signInWithPassword({
-          email: this.email,
-          password: this.password,
-        })
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', this.email)
+          .eq('password', this.password)
 
-        if (error || !user) {
+        if (error || data.length === 0) {
           alert('Invalid ID or password.')
         } else {
-          alert(`Welcome, ${user.email}!`)
+          const user = data[0]
+          alert(`Welcome, ${user.first_name}!`)
           localStorage.setItem('userId', user.id)
-          this.$router.push('/dashboard')
+
+          // Redirect based on role
+          if (user.role === 'Admin') {
+            this.$router.push('/AdminDashboard')
+          } else if (user.role === 'Member') {
+            this.$router.push('/MemberDashboard')
+          } else if (user.role === 'Officer' && user.position === 'Secretary') {
+            this.$router.push('/OfficerSecretaryDashboard')
+          } else if (
+            user.role === 'Officer' &&
+            (user.position === 'President' || user.position === 'Vice President')
+          ) {
+            this.$router.push('/OfficerPresidentDashboard')
+          } else if (user.role === 'Treasurer') {
+            this.$router.push('/OfficerTreasurerDashboard')
+          } else if (user.role === 'Costume Custodian') {
+            this.$router.push('/CostumeCustodianDashboard')
+          } else {
+            alert('Unknown role or position.')
+          }
         }
       } catch (err) {
         console.error('Login error:', err)

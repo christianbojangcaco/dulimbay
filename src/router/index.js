@@ -5,6 +5,8 @@ import NavBar from '@/views/NavBar.vue'
 import MemberDashboard from '@/views/MemberDashboard.vue'
 import OfficerSecretaryDashboard from '@/views/OfficerSecretaryDashboard.vue'
 import OfficerPresidentDashboard from '@/views/OfficerPresidentDashboard.vue'
+import OfficerTreasurerDashboard from '@/views/OfficerTreasurerDashboard.vue'
+import OfficerCostumeCustodianDashboard from '@/views/OfficerCostumeCustodianDashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 
 const router = createRouter({
@@ -26,19 +28,29 @@ const router = createRouter({
       component: NavBar,
     },
     {
-      path: '/dashboard/member',
+      path: '/MemberDashboard',
       name: 'memberDashboard',
       component: MemberDashboard,
     },
     {
-      path: '/dashboard/officer-secretary',
+      path: '/OfficerSecretaryDashboard',
       name: 'officerSecretaryDashboard',
       component: OfficerSecretaryDashboard,
     },
     {
-      path: '/dashboard/officer-president',
+      path: '/OfficerPresidentDashboard',
       name: 'officerPresidentDashboard',
       component: OfficerPresidentDashboard,
+    },
+    {
+      path: '/OfficerTreasurerDashboard',
+      name: 'officerTreasurerDashboard',
+      component: OfficerTreasurerDashboard,
+    },
+    {
+      path: '/OfficerCostumeCustodianDashboard',
+      name: 'officerCostumeCustodianDashboard',
+      component: OfficerCostumeCustodianDashboard,
     },
     {
       path: '/dashboard/admin',
