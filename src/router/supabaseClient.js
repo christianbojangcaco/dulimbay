@@ -1,6 +1,15 @@
+// src/router/supabaseClient.js
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+console.log('Environment Variables:')
+console.log('VITE_SUPABASE_URL:', supabaseUrl)
+console.log('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey)
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('supabaseUrl and supabaseAnonKey are required.')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

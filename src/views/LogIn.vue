@@ -2,17 +2,28 @@
   <v-app>
     <v-main class="app-main">
       <div class="header-section">
-        <h1 class="header-title">DULIMBAY THEATER ARTS GUILD</h1>
+        <h1 class="header-title">DULIMBAY</h1>
       </div>
       <v-container fluid fill-height class="d-flex align-center justify-center main-container">
         <v-row class="full-height">
           <v-col cols="4" class="d-flex align-center justify-center login-section">
             <v-card class="login-card">
               <v-card-text>
-                <v-form>
-                  <v-text-field label="ID Number" required></v-text-field>
-                  <v-text-field label="Password" type="password" required></v-text-field>
-                  <v-btn color="maroon" block class="login-btn">Login</v-btn>
+                <v-form @submit.prevent="login">
+                  <v-text-field v-model="email" label="Email" required></v-text-field>
+                  <v-text-field
+                    v-model="password"
+                    label="Password"
+                    type="password"
+                    required
+                  ></v-text-field>
+                  <v-btn color="maroon" block class="login-btn" type="submit"> Login </v-btn>
+                  <div class="signup-link">
+                    <p>
+                      Don't have an account?
+                      <a @click="navigateToSignUp" class="signup-link-hover">Sign Up Here</a>
+                    </p>
+                  </div>
                 </v-form>
               </v-card-text>
             </v-card>
@@ -20,9 +31,10 @@
           <v-col cols="8" class="d-flex align-start justify-start carousel-section right-container">
             <div class="carousel-background" ref="carouselBackground"></div>
             <div class="carousel-highlight carousel-description">
-              <h1>Welcome to the <strong>Dulimbay Theater Arts Guild's Website</strong>!</h1>
-              <h3 class="typing-effect">
-                <span class="typed-text"></span><span class="caret">|</span>
+              <h1>Welcome to <strong>Dulimbay's Website</strong>!</h1>
+              <h3>
+                Here, you can stay updated on event schedules, payments, and attendance. Login to
+                keep track of all the exciting activities and important announcements!
               </h3>
             </div>
           </v-col>
@@ -30,6 +42,11 @@
       </v-container>
       <v-footer class="footer-section">
         <div class="footer-content">&copy; 2025 Dulimbay</div>
+        <div class="">
+          <h3 class="typing-effect">
+            <span class="typed-text"></span>
+          </h3>
+        </div>
         <div class="footer-contact">
           Contact:
           <a href="mailto:dulimbay@example.com">
@@ -50,17 +67,16 @@
 </template>
 
 <script>
+import { supabase } from '@/router/supabaseClient'
+
 export default {
   data() {
     return {
-      headerBackground: '/images/Header-Footer-Background.jpg',
-      loginBackground: '/images/Loginback.jpg',
+      email: '',
+      password: '',
       images: ['/images/dtag1.jpg', '/images/dtag2.jpg', '/images/dtag3.jpg'],
       currentIndex: 0,
       nextIndex: 1,
-      typingText:
-        'Here, you can stay updated on event schedules, payments, and attendance. Login to keep track of all the exciting activities and important announcements!',
-      typedIndex: 0,
     }
   },
   mounted() {
@@ -68,29 +84,55 @@ export default {
     this.startTyping()
   },
   methods: {
+    async login() {
+      try {
+        const { user, error } = await supabase.auth.signInWithPassword({
+          email: this.email,
+          password: this.password,
+        })
+
+        if (error || !user) {
+          alert('Invalid email or password.')
+        } else {
+          alert(`Welcome, ${user.email}!`)
+          localStorage.setItem('userId', user.id)
+          this.$router.push('/dashboard')
+        }
+      } catch (err) {
+        console.error('Login error:', err)
+        alert('An unexpected error occurred.')
+      }
+    },
+    navigateToSignUp() {
+      this.$router.push('/signup')
+    },
     startCarousel() {
       setInterval(() => {
         this.nextIndex = (this.currentIndex + 1) % this.images.length
         const backgroundContainer = this.$refs.carouselBackground
         backgroundContainer.classList.remove('scroll-animation')
-        void backgroundContainer.offsetWidth // trigger reflow
+        void backgroundContainer.offsetWidth
         backgroundContainer.style.backgroundImage = `url(${this.images[this.nextIndex]})`
         backgroundContainer.classList.add('scroll-animation')
         this.currentIndex = this.nextIndex
-      }, 5000) // Change image every 5 seconds
+      }, 5000)
     },
     startTyping() {
       const element = document.querySelector('.typed-text')
-      const caret = document.querySelector('.caret')
-      const speed = 100 // Typing speed in milliseconds
-      setInterval(() => {
-        if (this.typedIndex < this.typingText.length) {
-          element.textContent += this.typingText.charAt(this.typedIndex)
-          this.typedIndex++
-        } else {
-          caret.style.display = 'none'
-        }
-      }, speed)
+      const phrases = ['WE SING!', 'WE ACT!', 'WE DANCE!']
+      let phraseIndex = 0
+
+      const changeText = () => {
+        element.textContent = phrases[phraseIndex]
+        element.classList.remove('fade-in-out')
+        void element.offsetWidth
+        element.classList.add('fade-in-out')
+
+        phraseIndex = (phraseIndex + 1) % phrases.length
+      }
+
+      changeText()
+      setInterval(changeText, 3000)
     },
   },
 }
@@ -183,10 +225,14 @@ body,
   color: white; /* Ensure text color is white */
 }
 
-v-card-text {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.signup-link a.signup-link-hover {
+  color: maroon;
+  text-decoration: none;
+}
+
+.signup-link a.signup-link-hover:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* Carousel Section */
@@ -240,30 +286,13 @@ v-card-text {
   word-break: break-word;
 }
 
-.typing-effect {
-  display: inline-flex;
-  align-items: center;
-}
-
+/* Typing Effect */
 .typed-text {
-  display: inline;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
 }
 
-.caret {
-  display: inline-block;
-  width: 10px;
-  background-color: white;
-  animation: blink 0.7s step-end infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-/* Shadows */
-.right-container {
-  box-shadow: -8px 0px 10px rgba(0, 0, 0, 0.3);
+.fade-in-out {
+  opacity: 1;
 }
 </style>

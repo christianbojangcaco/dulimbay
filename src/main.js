@@ -1,5 +1,3 @@
-//import './assets/main.css'
-
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
@@ -12,6 +10,9 @@ import * as directives from 'vuetify/directives'
 import App from './App.vue'
 import router from './router'
 
+// Supabase
+import { supabase } from './router/supabaseClient'
+
 const app = createApp(App)
 const vuetify = createVuetify({
   components,
@@ -21,5 +22,7 @@ const vuetify = createVuetify({
 app.use(createPinia())
 app.use(router)
 app.use(vuetify)
+
+app.config.globalProperties.$supabase = supabase
 
 app.mount('#app')

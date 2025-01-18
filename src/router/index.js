@@ -1,7 +1,11 @@
+import { createRouter, createWebHistory } from 'vue-router'
 import LogIn from '@/views/LogIn.vue'
 import SignUp from '@/views/SignUp.vue'
-import GenericDashboard from '@/views/GenericDashboard.vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import NavBar from '@/views/NavBar.vue'
+import MemberDashboard from '@/views/MemberDashboard.vue'
+import OfficerSecretaryDashboard from '@/views/OfficerSecretaryDashboard.vue'
+import OfficerPresidentDashboard from '@/views/OfficerPresidentDashboard.vue'
+import AdminDashboard from '@/views/AdminDashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,9 +21,29 @@ const router = createRouter({
       component: SignUp,
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: GenericDashboard,
+      path: '/navbar',
+      name: 'navbar',
+      component: NavBar,
+    },
+    {
+      path: '/dashboard/member',
+      name: 'memberDashboard',
+      component: MemberDashboard,
+    },
+    {
+      path: '/dashboard/officer-secretary',
+      name: 'officerSecretaryDashboard',
+      component: OfficerSecretaryDashboard,
+    },
+    {
+      path: '/dashboard/officer-president',
+      name: 'officerPresidentDashboard',
+      component: OfficerPresidentDashboard,
+    },
+    {
+      path: '/dashboard/admin',
+      name: 'adminDashboard',
+      component: AdminDashboard,
     },
   ],
 })
