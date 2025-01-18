@@ -10,7 +10,7 @@
             <v-card class="login-card">
               <v-card-text>
                 <v-form @submit.prevent="login">
-                  <v-text-field v-model="email" label="Email" required></v-text-field>
+                  <v-text-field v-model="email" label="ID" required></v-text-field>
                   <v-text-field
                     v-model="password"
                     label="Password"
@@ -92,7 +92,7 @@ export default {
         })
 
         if (error || !user) {
-          alert('Invalid email or password.')
+          alert('Invalid ID or password.')
         } else {
           alert(`Welcome, ${user.email}!`)
           localStorage.setItem('userId', user.id)
@@ -132,7 +132,7 @@ export default {
       }
 
       changeText()
-      setInterval(changeText, 3000)
+      setInterval(changeText, 1000)
     },
   },
 }
