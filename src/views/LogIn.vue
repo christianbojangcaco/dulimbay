@@ -40,7 +40,7 @@
           </v-col>
         </v-row>
       </v-container>
-      <v-footer class="footer-section">
+      <v-footer class="footer-section" app>
         <div class="footer-content">&copy; 2025 Dulimbay</div>
         <div class="">
           <h3 class="typing-effect">
@@ -96,7 +96,7 @@ export default {
           alert('Invalid ID or password.')
         } else {
           const user = data[0]
-          alert(`Welcome, ${user.first_name}!`)
+          alert(`Good Day, ${user.first_name}!`)
           localStorage.setItem('userId', user.id)
 
           // Redirect based on role
@@ -111,10 +111,12 @@ export default {
             (user.position === 'President' || user.position === 'Vice President')
           ) {
             this.$router.push('/OfficerPresidentDashboard')
-          } else if (user.role === 'Treasurer') {
+          } else if (user.role === 'Officer' && user.position === 'Treasurer') {
             this.$router.push('/OfficerTreasurerDashboard')
-          } else if (user.role === 'Costume Custodian') {
-            this.$router.push('/CostumeCustodianDashboard')
+          } else if (user.role === 'Officer' && user.position === 'Costume Custodian') {
+            this.$router.push('/OfficerCostumeCustodianDashboard')
+          } else if (user.role === 'Officer') {
+            this.$router.push('/OfficerDashboard')
           } else {
             alert('Unknown role or position.')
           }
@@ -315,5 +317,52 @@ body,
 
 .fade-in-out {
   opacity: 1;
+}
+
+/* Media Queries for Responsive Design */
+@media only screen and (max-width: 768px) {
+  .main-container {
+    height: auto;
+  }
+
+  .full-height {
+    height: auto;
+  }
+
+  .header-title {
+    font-size: 2rem; /* Smaller title for mobile */
+  }
+
+  .footer-section {
+    flex-direction: column;
+    height: auto;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .footer-content,
+  .footer-contact {
+    margin: 10px 0;
+  }
+
+  .login-section {
+    padding: 20px;
+    background: url('/images/Loginback.jpg') no-repeat center center;
+    background-size: cover;
+  }
+
+  .login-card {
+    width: 100%;
+    box-shadow: none;
+  }
+
+  .carousel-section {
+    display: none; /* Hide carousel on smaller screens */
+  }
+
+  .footer-contact img {
+    width: 18px;
+    height: 18px;
+  }
 }
 </style>

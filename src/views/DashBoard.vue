@@ -17,9 +17,9 @@
               <v-list>
                 <v-list-item-group>
                   <v-list-item v-for="(event, index) in events" :key="event.id">
-                    <v-row class="d-flex align-center">
-                      <v-col class="mr-1" cols="10">
-                        <v-list-item-content>
+                    <v-row>
+                      <v-col class="shrink">
+                        <v-list-item-content class="mr-1">
                           <v-list-item-title>{{ index + 1 }}. {{ event.title }}</v-list-item-title>
                           <v-list-item-subtitle
                             >When: {{ formatDateTime(event.date) }}</v-list-item-subtitle
@@ -30,13 +30,8 @@
                           <v-list-item-subtitle>{{ event.description }}</v-list-item-subtitle>
                         </v-list-item-content>
                       </v-col>
-                      <v-col cols="2" class="text-right delete-btn">
-                        <v-btn
-                          small
-                          color="red"
-                          @click="deleteEvent(event.id)"
-                          class="delete-button"
-                        >
+                      <v-col class="shrink">
+                        <v-btn icon @click="deleteEvent(event.id)">
                           <v-icon>mdi-delete</v-icon>
                         </v-btn>
                       </v-col>
@@ -315,8 +310,8 @@ export default {
   background: url('/images/background.jpg') no-repeat center;
   background-size: cover;
   background-color: 0.1;
-  flex: 1;
-  overflow-y: auto;
+  flex: 1; /* Allow the main content to grow and shrink */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .notification-events,
@@ -340,7 +335,7 @@ export default {
 }
 
 .mr-1 {
-  margin-right: 8px;
+  margin-right: 8px; /* Reduced margin-right space */
 }
 
 .bold-border {
@@ -350,85 +345,34 @@ export default {
 .container-with-footer {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100vh; /* Ensure the container takes the full height of the viewport */
 }
 
 .main-content {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1; /* Take remaining space */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .footer {
   background: url('images/Header-Footer-Background.jpg') no-repeat;
   background-size: cover;
   color: white;
-  padding: 0;
+  padding: 0; /* Remove padding */
 }
 
 .footer-bar {
-  height: 80px;
+  height: 80px; /* Fixed footer height */
   width: 100%;
   text-align: center;
 }
 
 .footer-bar span {
   font-size: 18px;
-  line-height: 80px;
+  line-height: 80px; /* Vertically center the text */
 }
 
 .footer-bar a {
   color: white;
   text-decoration: none;
-}
-
-.notification-events .v-list-item-content {
-  overflow: hidden;
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-.notification-events .v-list-item-title,
-.notification-events .v-list-item-subtitle {
-  text-overflow: unset;
-  overflow: unset;
-  white-space: normal;
-}
-
-.event-title {
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-.event-description,
-.event-subtitle {
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-.v-list-item-content {
-  display: block;
-}
-
-.v-row {
-  flex-wrap: wrap;
-}
-
-.v-col {
-  flex: 1 1 auto;
-}
-
-.v-btn {
-  min-width: 40px;
-}
-
-.delete-btn {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.delete-button {
-  background-color: red;
-  color: white;
-  border-radius: 50%;
 }
 </style>

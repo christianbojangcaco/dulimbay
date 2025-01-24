@@ -1,7 +1,13 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
+<template>
+  <router-view />
+</template>
+
+<script>
+export default {
+  name: 'App',
+}
 </script>
 
-<template>
-  <RouterView />
-</template>
+<style>
+/* Add any global styles if needed, or leave it blank */
+</style>

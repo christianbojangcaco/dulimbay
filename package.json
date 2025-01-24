@@ -11,6 +11,8 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@mdi/font": "^7.4.47",
     "@supabase/supabase-js": "^2.47.12",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
