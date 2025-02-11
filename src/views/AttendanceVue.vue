@@ -11,10 +11,8 @@
             </v-card-title>
             <v-card-text>
               <div class="top-section">
-                <!-- Mark Attendance Button -->
                 <v-btn @click="showDialog = true" color="primary">Mark Attendance</v-btn>
-
-                <!-- Attendance Legend (Aligned Right) -->
+                <v-btn @click="showQRScanner = true" color="success">Scan QR Code</v-btn>
                 <div class="legend">
                   <span class="checkmark">✔️ - Present</span>
                   <span class="excused">➖ - Excused</span>
@@ -26,20 +24,20 @@
                 <v-table>
                   <thead>
                     <tr>
-                      <th class="centered-header">Last Name</th>
-                      <th v-for="date in weekDates" :key="date" class="centered-header">
-                        <div class="day-name">{{ getDayName(date) }}</div>
-                        <div class="date-text">{{ formatDate(date) }}</div>
+                      <th class="bold-header centered-header">Last Name</th>
+                      <th v-for="date in weekDates" :key="date" class="bold-header centered-header">
+                        <div class="bold-day">{{ getDayName(date) }}</div>
+                        <div>{{ formatDate(date) }}</div>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="user in sortedUsers" :key="user.id">
-                      <td class="centered-cell">{{ user.last_name }}</td>
-                      <td v-for="date in weekDates" :key="date" class="centered-cell">
+                      <td class="bold-cell centered-cell">{{ user.last_name }}</td>
+                      <td v-for="date in weekDates" :key="date" class="status-cell">
                         <span v-if="isPresent(user.id, date)" class="checkmark">✔️</span>
                         <span v-else-if="isExcused(user.id, date)" class="excused">➖</span>
-                        <span v-else-if="isAbsent(user.id, date)" class="absent">❌</span>
+                        <span v-else-if="isPastDate(user.id, date)" class="absent">❌</span>
                       </td>
                     </tr>
                   </tbody>
@@ -51,7 +49,7 @@
       </v-row>
     </v-container>
 
-    <!-- Pop-up Dialog for Attendance Input -->
+    <!-- Attendance Input Dialog -->
     <v-dialog v-model="showDialog" max-width="400px">
       <v-card>
         <v-card-title>Mark Attendance</v-card-title>
@@ -74,6 +72,19 @@
       </v-card>
     </v-dialog>
 
+    <!-- QR Code Scanner Dialog -->
+    <v-dialog v-model="showQRScanner" max-width="500px">
+      <v-card>
+        <v-card-title>Scan QR Code</v-card-title>
+        <v-card-text>
+          <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="grey" @click="showQRScanner = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <FooterBar class="footer-bar" />
   </div>
 </template>
@@ -83,11 +94,13 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import FooterBar from '@/components/FooterBar.vue'
 import NavBar from '@/components/NavBar.vue'
 import { supabase } from '@/router/supabaseClient'
+import { QrcodeStream } from 'vue-qrcode-reader'
 
 export default {
   components: {
     NavBar,
     FooterBar,
+    QrcodeStream,
   },
   setup() {
     const role = ref('Admin')
@@ -96,8 +109,9 @@ export default {
     const weekDates = ref([])
     const attendance = reactive({})
     const inputId = ref('')
-    const selectedStatus = ref('Present') // Default selection
-    const showDialog = ref(false) // Controls pop-up visibility
+    const selectedStatus = ref('Present')
+    const showDialog = ref(false)
+    const showQRScanner = ref(false)
 
     const fetchUsers = async () => {
       const { data, error } = await supabase.from('users').select('id, last_name')
@@ -110,16 +124,47 @@ export default {
 
     const calculateWeekDates = () => {
       const today = new Date()
-      const currentDay = today.getDay() // 0 (Sunday) - 6 (Saturday)
+      const currentDay = today.getDay()
       const startOfWeek = new Date(today)
-      startOfWeek.setDate(today.getDate() - currentDay) // Move to last Sunday
+      startOfWeek.setDate(today.getDate() - currentDay)
 
       weekDates.value = []
       for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek)
         date.setDate(startOfWeek.getDate() + i)
-        weekDates.value.push(date.toISOString().split('T')[0]) // Store as YYYY-MM-DD
+        weekDates.value.push(date.toISOString().split('T')[0])
       }
+    }
+
+    const markAttendance = async (userId) => {
+      const today = new Date().toISOString().split('T')[0]
+
+      if (!userId) {
+        alert('Invalid User ID.')
+        return
+      }
+
+      const { error } = await supabase
+        .from('attendance')
+        .upsert([{ user_id: userId, status: 'Present', date: today }], {
+          onConflict: ['user_id', 'date'],
+        })
+
+      if (!error) {
+        attendance[userId][today] = 'Present'
+        alert('Attendance marked successfully!')
+      } else {
+        console.error('Error updating attendance:', error)
+      }
+
+      inputId.value = ''
+      showDialog.value = false
+      await fetchAttendance()
+    }
+
+    const onQRCodeScanned = async (decodedString) => {
+      showQRScanner.value = false
+      await markAttendance(decodedString)
     }
 
     const fetchAttendance = async () => {
@@ -145,61 +190,9 @@ export default {
       })
 
       data.forEach((record) => {
-        if (!attendance[record.user_id]) {
-          attendance[record.user_id] = {}
-        }
         attendance[record.user_id][record.date] = record.status
       })
-
-      console.log('Attendance Data:', JSON.parse(JSON.stringify(attendance)))
     }
-
-    const markAttendance = async () => {
-      const userId = inputId.value.trim()
-      const now = new Date()
-      now.setHours(now.getHours() + 8) // ✅ Adjust to UTC+8
-      const today = now.toISOString().split('T')[0] // Store as YYYY-MM-DD
-
-      if (!userId) {
-        alert('Please enter a valid User ID.')
-        return
-      }
-
-      // ✅ Insert attendance with selected status
-      const { error: insertError } = await supabase
-        .from('attendance')
-        .insert([{ user_id: userId, status: selectedStatus.value, date: today }])
-
-      if (insertError) {
-        console.error('Error inserting attendance:', insertError)
-      } else {
-        if (!attendance[userId]) {
-          attendance[userId] = {}
-        }
-        attendance[userId][today] = selectedStatus.value
-
-        alert('Attendance marked successfully!')
-      }
-
-      inputId.value = ''
-      showDialog.value = false
-      await fetchAttendance() // Refresh data after inserting
-    }
-
-    const sortedUsers = computed(() => {
-      return [...users.value].sort((a, b) => a.last_name.localeCompare(b.last_name))
-    })
-
-    const isPresent = (userId, date) => attendance[userId]?.[date] === 'Present'
-    const isExcused = (userId, date) => attendance[userId]?.[date] === 'Excused'
-    const isAbsent = (userId, date) => attendance[userId]?.[date] === 'Absent'
-
-    const formatDate = (date) =>
-      new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(
-        new Date(date),
-      )
-    const getDayName = (date) =>
-      new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date(date))
 
     onMounted(async () => {
       await fetchUsers()
@@ -216,13 +209,20 @@ export default {
       inputId,
       selectedStatus,
       showDialog,
+      showQRScanner,
       markAttendance,
-      sortedUsers,
-      isPresent,
-      isExcused,
-      isAbsent,
-      formatDate,
-      getDayName,
+      onQRCodeScanned,
+      fetchAttendance,
+      sortedUsers: computed(() =>
+        [...users.value].sort((a, b) => a.last_name.localeCompare(b.last_name)),
+      ),
+      isPresent: (userId, date) => attendance[userId]?.[date] === 'Present',
+      isExcused: (userId, date) => attendance[userId]?.[date] === 'Excused',
+      isPastDate: (userId, date) => new Date(date) < new Date() && !attendance[userId]?.[date],
+      formatDate: (date) =>
+        new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(date)),
+      getDayName: (date) =>
+        new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date(date)),
     }
   },
 }
@@ -248,17 +248,24 @@ export default {
 }
 
 .legend {
-  display: flex;
-  gap: 15px;
+  margin-left: auto;
 }
 
-.table-container {
-  max-height: 50vh;
-  overflow-y: auto;
+.bold-header,
+.centered-header {
+  text-align: center;
+  font-weight: bold;
 }
 
-.centered-header,
+.bold-day {
+  font-weight: bold;
+}
+
 .centered-cell {
+  text-align: center;
+}
+
+.status-cell {
   text-align: center;
 }
 
@@ -270,15 +277,5 @@ export default {
 }
 .absent {
   color: red;
-}
-
-.footer-bar {
-  position: sticky;
-  bottom: 0;
-  width: 100%;
-  background-color: #f8f9fa;
-  text-align: center;
-  padding: 10px 0;
-  z-index: 10;
 }
 </style>
