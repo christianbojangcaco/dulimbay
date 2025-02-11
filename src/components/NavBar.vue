@@ -5,10 +5,11 @@
       <span v-else>{{ typingText }}</span>
     </v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-menu>
-      <template v-slot:activator="{ on, props }">
-        <v-btn v-bind="props" v-on="on" class="menu-button">
-          <v-icon left>mdi-menu</v-icon> Menu
+    <v-menu offset-y>
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" class="menu-button">
+          <v-icon left>mdi-menu</v-icon>
+          Menu
         </v-btn>
       </template>
       <v-list>
@@ -23,8 +24,8 @@
           </router-link>
         </v-list-item>
         <v-list-item>
-          <router-link to="/AllAttendance" class="no-underline">
-            <v-list-item-title class="menu-item">All Attendance</v-list-item-title>
+          <router-link to="/Attendance" class="no-underline">
+            <v-list-item-title class="menu-item">Attendance</v-list-item-title>
           </router-link>
         </v-list-item>
         <v-list-item>

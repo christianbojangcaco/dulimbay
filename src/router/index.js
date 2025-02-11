@@ -10,6 +10,7 @@ import OfficerTreasurerDashboard from '@/views/OfficerTreasurerDashboard.vue'
 import OfficerCostumeCustodianDashboard from '@/views/OfficerCostumeCustodianDashboard.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import FooterBar from '@/components/FooterBar.vue'
+import AttendanceVue from '@/views/AttendanceVue.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -68,6 +69,11 @@ const router = createRouter({
       path: '/OfficerDashboard',
       name: 'officerdashboard',
       component: OfficerDashboard,
+    },
+    {
+      path: '/Attendance',
+      name: 'attendance',
+      component: AttendanceVue,
     },
   ],
 })

@@ -3,76 +3,61 @@
     <NavBar :role="role" :firstName="firstName" />
     <v-container fluid class="main-bkg main-content">
       <v-row>
-        <v-col cols="12" md="6" lg="3">
-          <v-card class="notification-events bold-border">
-            <v-card-title class="headline centered">
-              Events
-              <v-spacer></v-spacer>
-              <v-btn icon @click="showAddEventCard">
-                <v-icon>mdi-plus</v-icon>
-              </v-btn>
-            </v-card-title>
+        <v-col cols="12" md="6" lg="3" class="event-column">
+          <v-container class="notification-events white-bg bold-border">
+            <v-row class="align-center">
+              <v-col class="headline centered"> Events </v-col>
+              <v-col class="d-flex justify-end">
+                <v-btn @click="showAddEventCard" class="add-event-btn">Add Event</v-btn>
+              </v-col>
+            </v-row>
             <v-divider class="mb-2 gray-divider"></v-divider>
-            <v-card-text>
-              <v-list>
-                <v-list-item-group>
-                  <v-list-item v-for="(event, index) in events" :key="event.id">
-                    <v-row class="d-flex align-center">
-                      <v-col class="mr-1" cols="10">
-                        <v-list-item-content>
-                          <v-list-item-title>{{ index + 1 }}. {{ event.title }}</v-list-item-title>
-                          <v-list-item-subtitle
-                            >When: {{ formatDateTime(event.date) }}</v-list-item-subtitle
-                          >
-                          <v-list-item-subtitle
-                            >Dances Name: {{ event.dance_name }}</v-list-item-subtitle
-                          >
-                          <v-list-item-subtitle>{{ event.description }}</v-list-item-subtitle>
-                        </v-list-item-content>
-                      </v-col>
-                      <v-col cols="2" class="text-right delete-btn">
-                        <v-btn
-                          small
-                          color="red"
-                          @click="deleteEvent(event.id)"
-                          class="delete-button"
-                        >
-                          <v-icon>mdi-delete</v-icon>
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                    <v-divider
-                      class="gray-divider my-2"
-                      v-if="index < events.length - 1"
-                    ></v-divider>
-                  </v-list-item>
-                </v-list-item-group>
-              </v-list>
-            </v-card-text>
-          </v-card>
+            <v-container class="event-list-container">
+              <v-row
+                v-for="(event, index) in events"
+                :key="event.id"
+                class="d-flex event-row align-center"
+              >
+                <v-col class="event-details" cols="10">
+                  <div class="event-title">{{ index + 1 }}. {{ event.title }}</div>
+                  <div class="event-subtitle">When: {{ formatDate(event.date) }}</div>
+                  <div class="event-subtitle">Time: {{ formatTime(event.time) }}</div>
+                  <div class="event-description">{{ event.description }}</div>
+                </v-col>
+                <v-col cols="2" class="d-flex justify-center align-center">
+                  <v-btn small color="red" @click="deleteEvent(event.id)" class="delete-button">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </v-col>
+                <v-divider class="gray-divider my-2" v-if="index < events.length - 1"></v-divider>
+              </v-row>
+            </v-container>
+          </v-container>
         </v-col>
 
-        <v-col cols="12" md="6" lg="3">
-          <v-card class="attendance bold-border">
-            <Attendance
-              :view="'admin'"
-              :data="attendanceData"
-              @next="fetchNextWeek"
-              @prev="fetchPrevWeek"
-            />
-          </v-card>
-        </v-col>
-
-        <v-col cols="12" md="6" lg="3">
-          <v-card class="borrowed-costumes bold-border">
-            <BorrowedCostumes :data="borrowedCostumes" />
-          </v-card>
-        </v-col>
-
-        <v-col cols="12" md="6" lg="3">
-          <v-card class="borrowed-instruments bold-border">
-            <BorrowedInstruments :data="borrowedInstruments" />
-          </v-card>
+        <v-col cols="12" md="6" lg="9">
+          <v-row>
+            <v-col cols="12">
+              <v-card class="attendance bold-border">
+                <Attendance
+                  :view="'admin'"
+                  :data="attendanceData"
+                  @next="fetchNextWeek"
+                  @prev="fetchPrevWeek"
+                />
+              </v-card>
+            </v-col>
+            <v-col cols="12">
+              <v-card class="borrowed-costumes bold-border">
+                <BorrowedCostumes :data="borrowedCostumes" />
+              </v-card>
+            </v-col>
+            <v-col cols="12">
+              <v-card class="borrowed-instruments bold-border">
+                <BorrowedInstruments :data="borrowedInstruments" />
+              </v-card>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
 
@@ -196,13 +181,18 @@ export default {
   methods: {
     async fetchEvents() {
       try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .filter('date', 'gte', new Date().toISOString())
+        const { data, error } = await supabase.from('events').select('*')
 
         if (error) throw error
-        this.events = data
+
+        // Get the current date and time
+        const currentDateTime = new Date()
+
+        // Filter out events that have already passed
+        this.events = data.filter((event) => {
+          const eventDateTime = new Date(event.date) // Assuming event.date is a valid date string
+          return eventDateTime >= currentDateTime // Only keep future events
+        })
       } catch (err) {
         console.error('Error fetching events:', err.message)
       }
@@ -263,17 +253,28 @@ export default {
         }
       }
     },
-    formatDateTime(dateTime) {
+    formatDate(date) {
       const options = {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true,
         timeZone: 'Asia/Manila',
       }
-      return new Intl.DateTimeFormat('en-US', options).format(new Date(dateTime))
+      return new Intl.DateTimeFormat('en-US', options).format(new Date(date))
+    },
+    formatTime(time) {
+      const [hours, minutes] = time.split(':')
+      let formattedHours = parseInt(hours, 10)
+      const suffix = formattedHours >= 12 ? 'PM' : 'AM'
+
+      // Convert to 12-hour format
+      if (formattedHours > 12) {
+        formattedHours -= 12
+      } else if (formattedHours === 0) {
+        formattedHours = 12 // Handle midnight case
+      }
+
+      return `${formattedHours}:${minutes} ${suffix}` // Format as HH:mm AM/PM
     },
     async deleteEvent(eventId) {
       try {
@@ -286,23 +287,54 @@ export default {
       }
     },
     async fetchAttendance() {
-      // Fetch attendance logic here...
+      try {
+        const { data, error } = await supabase
+          .from('attendance')
+          .select('*')
+          .order('date', { ascending: false })
+
+        if (error) throw error
+        this.attendanceData = data
+      } catch (err) {
+        console.error('Error fetching attendance:', err.message)
+      }
     },
     async fetchBorrowedCostumes() {
-      // Fetch borrowed costumes logic here...
+      try {
+        const { data, error } = await supabase
+          .from('borrowed_costumes')
+          .select('*')
+          .order('borrowed_date', { ascending: false })
+
+        if (error) throw error
+        this.borrowedCostumes = data
+      } catch (err) {
+        console.error('Error fetching borrowed costumes:', err.message)
+      }
     },
     async fetchBorrowedInstruments() {
-      // Fetch borrowed instruments logic here...
+      try {
+        const { data, error } = await supabase
+          .from('borrowed_instruments')
+          .select('*')
+          .order('borrowed_date', { ascending: false })
+
+        if (error) throw error
+        this.borrowedInstruments = data
+      } catch (err) {
+        console.error('Error fetching borrowed instruments:', err.message)
+      }
     },
     async checkEventExpiry() {
       const currentDateTime = new Date().toISOString()
 
       // Loop through events and check if any event has passed
       for (let event of this.events) {
-        if (event.date < currentDateTime) {
-          // Event has passed, refresh the events list
-          await this.fetchEvents()
-          break
+        const eventDateTime = new Date(event.date).toISOString() // Assuming event.date contains the full date and time
+        if (eventDateTime < currentDateTime) {
+          // Event has passed, reload the page
+          window.location.reload()
+          break // Exit the loop after reloading
         }
       }
     },
@@ -314,7 +346,7 @@ export default {
 .main-bkg {
   background: url('/images/background.jpg') no-repeat center;
   background-size: cover;
-  background-color: 0.1;
+  background-color: rgba(0, 0, 0, 0.1);
   flex: 1;
   overflow-y: auto;
 }
@@ -324,6 +356,28 @@ export default {
 .borrowed-costumes,
 .borrowed-instruments {
   flex: 1;
+}
+
+.white-bg {
+  background-color: white !important;
+}
+
+.event-column {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px); /* Adjust height based on header and footer */
+}
+
+.event-list-container {
+  flex: 1;
+  overflow-y: auto;
+  height: 100%; /* Fill available space */
+}
+
+.event-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .headline {
@@ -381,14 +435,14 @@ export default {
   text-decoration: none;
 }
 
-.notification-events .v-list-item-content {
+.notification-events .event-details {
   overflow: hidden;
   white-space: normal;
   word-wrap: break-word;
 }
 
-.notification-events .v-list-item-title,
-.notification-events .v-list-item-subtitle {
+.notification-events .event-title,
+.notification-events .event-subtitle {
   text-overflow: unset;
   overflow: unset;
   white-space: normal;
@@ -430,5 +484,44 @@ export default {
   background-color: red;
   color: white;
   border-radius: 50%;
+  margin-left: 10px;
+}
+
+.add-event-btn {
+  width: 100%;
+  text-align: center;
+  background-color: #1976d2;
+  color: white;
+}
+
+/* Media Queries for Responsive Design */
+@media only screen and (max-width: 768px) {
+  .event-column {
+    height: auto; /* Allow height to adjust */
+  }
+
+  .event-list-container {
+    height: auto; /* Allow height to adjust */
+  }
+
+  .headline {
+    font-size: 20px; /* Smaller headline for mobile */
+  }
+
+  .add-event-btn {
+    font-size: 14px; /* Smaller button font size */
+  }
+
+  .event-title {
+    font-size: 16px; /* Smaller event title */
+  }
+
+  .event-subtitle {
+    font-size: 14px; /* Smaller subtitle */
+  }
+
+  .event-description {
+    font-size: 12px; /* Smaller description */
+  }
 }
 </style>

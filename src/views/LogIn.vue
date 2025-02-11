@@ -6,7 +6,7 @@
       </div>
       <v-container fluid fill-height class="d-flex align-center justify-center main-container">
         <v-row class="full-height">
-          <v-col cols="4" class="d-flex align-center justify-center login-section">
+          <v-col cols="12" md="4" class="d-flex align-center justify-center login-section">
             <v-card class="login-card">
               <v-card-text>
                 <v-form @submit.prevent="login">
@@ -28,7 +28,11 @@
               </v-card-text>
             </v-card>
           </v-col>
-          <v-col cols="8" class="d-flex align-start justify-start carousel-section right-container">
+          <v-col
+            cols="12"
+            md="8"
+            class="d-flex align-start justify-start carousel-section right-container"
+          >
             <div class="carousel-background" ref="carouselBackground"></div>
             <div class="carousel-highlight carousel-description">
               <h1>Welcome to <strong>Dulimbay's Website</strong>!</h1>
@@ -82,6 +86,7 @@ export default {
   mounted() {
     this.startCarousel()
     this.startTyping()
+    this.updateCarouselBackground() // Set initial background immediately
   },
   methods: {
     async login() {
@@ -132,13 +137,16 @@ export default {
     startCarousel() {
       setInterval(() => {
         this.nextIndex = (this.currentIndex + 1) % this.images.length
-        const backgroundContainer = this.$refs.carouselBackground
-        backgroundContainer.classList.remove('scroll-animation')
-        void backgroundContainer.offsetWidth
-        backgroundContainer.style.backgroundImage = `url(${this.images[this.nextIndex]})`
-        backgroundContainer.classList.add('scroll-animation')
+        this.updateCarouselBackground()
         this.currentIndex = this.nextIndex
       }, 5000)
+    },
+    updateCarouselBackground() {
+      const backgroundContainer = this.$refs.carouselBackground
+      backgroundContainer.style.backgroundImage = `url(${this.images[this.currentIndex]})`
+      backgroundContainer.classList.remove('scroll-animation')
+      void backgroundContainer.offsetWidth // Trigger reflow
+      backgroundContainer.classList.add('scroll-animation')
     },
     startTyping() {
       const element = document.querySelector('.typed-text')
@@ -209,7 +217,7 @@ body,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 33px 20px;
+  padding: 20px; /* Adjusted padding */
   position: fixed;
   bottom: 0;
   width: 100%;
@@ -230,11 +238,12 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px; /* Added padding for better spacing */
 }
 
 .login-card {
-  width: 350px; /* Fixed width */
-  max-width: 90%; /* Responsive constraint */
+  width: 100%; /* Full width for smaller screens */
+  max-width: 400px; /* Maximum width */
   height: auto; /* Dynamic height */
   padding: 20px; /* Inner spacing */
   border-radius: 8px; /* Rounded corners */
@@ -242,8 +251,8 @@ body,
 }
 
 .login-btn {
-  font-size: 14px; /* Smaller button font size */
-  padding: 8px 10px; /* Reduce button size */
+  font-size: 16px; /* Adjusted button font size */
+  padding: 10px; /* Increased button size */
   background-color: maroon; /* Change button color to maroon */
   color: white; /* Ensure text color is white */
 }
@@ -322,11 +331,11 @@ body,
 /* Media Queries for Responsive Design */
 @media only screen and (max-width: 768px) {
   .main-container {
-    height: auto;
+    height: auto; /* Allow height to adjust */
   }
 
   .full-height {
-    height: auto;
+    height: auto; /* Allow height to adjust */
   }
 
   .header-title {
@@ -336,7 +345,7 @@ body,
   .footer-section {
     flex-direction: column;
     height: auto;
-    padding: 20px;
+    padding: 10px; /* Adjusted padding */
     text-align: center;
   }
 
@@ -352,7 +361,7 @@ body,
   }
 
   .login-card {
-    width: 100%;
+    width: 90%; /* Responsive width */
     box-shadow: none;
   }
 
