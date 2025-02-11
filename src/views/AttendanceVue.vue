@@ -49,37 +49,20 @@
       </v-row>
     </v-container>
 
-    <!-- Attendance Input Dialog -->
-    <v-dialog v-model="showDialog" max-width="400px">
-      <v-card>
-        <v-card-title>Mark Attendance</v-card-title>
-        <v-card-text>
-          <v-text-field
-            v-model="inputId"
-            label="Enter User ID"
-            placeholder="Enter ID"
-          ></v-text-field>
-          <v-select
-            v-model="selectedStatus"
-            :items="['Present', 'Excused', 'Absent']"
-            label="Select Status"
-          ></v-select>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="grey" @click="showDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="markAttendance">Submit</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
     <!-- QR Code Scanner Dialog -->
     <v-dialog v-model="showQRScanner" max-width="500px">
       <v-card>
         <v-card-title>Scan QR Code</v-card-title>
         <v-card-text>
-          <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+          <qrcode-stream
+            @detect="onQRCodeScanned"
+            @camera-on="onCameraReady"
+            @camera-off="onCameraStopped"
+          ></qrcode-stream>
+          <v-alert v-if="scanError" type="error" dense>{{ scanError }}</v-alert>
         </v-card-text>
         <v-card-actions>
+          <v-btn color="red" @click="resetCamera">Reset Camera</v-btn>
           <v-btn color="grey" @click="showQRScanner = false">Close</v-btn>
         </v-card-actions>
       </v-card>
@@ -108,10 +91,9 @@ export default {
     const users = ref([])
     const weekDates = ref([])
     const attendance = reactive({})
-    const inputId = ref('')
-    const selectedStatus = ref('Present')
-    const showDialog = ref(false)
     const showQRScanner = ref(false)
+    const scanError = ref('')
+    const scannerKey = ref(0) // Used to force re-render the scanner
 
     const fetchUsers = async () => {
       const { data, error } = await supabase.from('users').select('id, last_name')
@@ -140,9 +122,11 @@ export default {
       const today = new Date().toISOString().split('T')[0]
 
       if (!userId) {
-        alert('Invalid User ID.')
+        scanError.value = 'Invalid QR Code. Please try again.'
         return
       }
+
+      scanError.value = ''
 
       const { error } = await supabase
         .from('attendance')
@@ -156,15 +140,19 @@ export default {
       } else {
         console.error('Error updating attendance:', error)
       }
-
-      inputId.value = ''
-      showDialog.value = false
-      await fetchAttendance()
     }
 
-    const onQRCodeScanned = async (decodedString) => {
-      showQRScanner.value = false
-      await markAttendance(decodedString)
+    const onQRCodeScanned = async (decodedResults) => {
+      if (decodedResults.length > 0) {
+        const userId = decodedResults[0].rawValue.trim()
+        showQRScanner.value = false
+        await markAttendance(userId)
+      }
+    }
+
+    const resetCamera = () => {
+      scannerKey.value += 1
+      scanError.value = ''
     }
 
     const fetchAttendance = async () => {
@@ -194,6 +182,14 @@ export default {
       })
     }
 
+    const onCameraReady = () => {
+      scanError.value = ''
+    }
+
+    const onCameraStopped = () => {
+      scanError.value = 'Camera stopped unexpectedly. Try resetting.'
+    }
+
     onMounted(async () => {
       await fetchUsers()
       calculateWeekDates()
@@ -206,13 +202,15 @@ export default {
       users,
       weekDates,
       attendance,
-      inputId,
-      selectedStatus,
-      showDialog,
       showQRScanner,
+      scanError,
+      scannerKey,
       markAttendance,
       onQRCodeScanned,
+      resetCamera,
       fetchAttendance,
+      onCameraReady,
+      onCameraStopped,
       sortedUsers: computed(() =>
         [...users.value].sort((a, b) => a.last_name.localeCompare(b.last_name)),
       ),
